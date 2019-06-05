@@ -19,9 +19,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!--suppress AndroidDomInspection -->
-        <service android:name=".AudioService">
-                    </service>
+         <service android:name=".AudioService"/>
     </application>
 
 </manifest>

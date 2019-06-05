@@ -43,27 +43,21 @@
         android:orientation="horizontal">
         <Button
             android:layout_width="0dp"
-            android:layout_height="55dp"
+            android:layout_height="100dp"
             android:layout_weight="0.3"
             android:id="@+id/bBackward"
             android:background="@drawable/ic_arrow_back_black_24dp" />
 
         <Button
             android:layout_width="0dp"
-            android:layout_height="55dp"
+            android:layout_height="100dp"
             android:layout_weight="0.4"
             android:id="@+id/bPlay"
             android:background="@drawable/ic_play_arrow_black_24dp" />
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="55dp"
-            android:layout_weight="0.4"
-            android:id="@+id/bPause"
-            android:background="@drawable/ic_pause_black_24dp" />
 
         <Button
             android:layout_width="0dp"
-            android:layout_height="55dp"
+            android:layout_height="100dp"
             android:layout_weight="0.3"
             android:id="@+id/bForward"
             android:background="@drawable/ic_arrow_forward_black_24dp" />
