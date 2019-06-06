@@ -22,29 +22,35 @@ public class AudioService extends Service {
 
     private final IBinder iBinder=new MyBinder();
 
-    int count;
-    int currentPosition=0;
+    int count=0;
+
      MediaPlayer mediaPlayer;
+     MediaPlayer mp3;
+     MediaPlayer mp2;
+    int[] res={R.raw.a,R.raw.b,R.raw.c,R.raw.d};
 
     @Override
     public IBinder onBind(Intent intent) {
 
         return iBinder;
     }
-    int[] songs={R.raw.a, R.raw.b,R.raw.c,R.raw.d};
+
 
     @Override
     public void onCreate() {
 
-        mediaPlayer = MediaPlayer.create(getApplicationContext(), songs[count]);
-        Toast.makeText(getApplicationContext(),"Service Created",Toast.LENGTH_LONG).show();
-
+    mediaPlayer = MediaPlayer.create(getApplicationContext(), res[count]);
+        mp2 = MediaPlayer.create(getApplicationContext(),res[1] );
+        mp3 = MediaPlayer.create(getApplicationContext(),res[2] );
+        mp2.setLooping(true);
+        mp3.setLooping(true);
+        mediaPlayer.setLooping(true);
+        Toast.makeText(getApplicationContext(), "Service Created", Toast.LENGTH_LONG).show();
       }
 
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
 
         Toast.makeText(getApplicationContext(),"Service Started",Toast.LENGTH_LONG).show();
         return START_STICKY;
@@ -69,27 +75,21 @@ public class AudioService extends Service {
     }
 
     public int getMusicCurPos(){
-        if(mediaPlayer!=null&&mediaPlayer.isPlaying()){
-              currentPosition=mediaPlayer.getCurrentPosition();
-        }
-        return currentPosition;
-    }
 
-    public void pauseMusic(){
-        mediaPlayer.pause();
-        Log.d(getClass().getSimpleName(), "pauseMusic()");
-    }
+        return mediaPlayer.getCurrentPosition();
+}
 
-    public void playMusic(){
-        mediaPlayer.start();
-        Log.d(getClass().getSimpleName(), "start()");
-    }
-    public void stopMusic(){
-        mediaPlayer.stop();
-        Log.d(getClass().getSimpleName(), "stop()");
-    }
-    public void seekToPos (int pos){
+public void seekToPos(int pos){
         mediaPlayer.seekTo(pos);
     }
+public void playNextSong(){
+        mp3.stop();
+       mediaPlayer.stop();
+      }
+public void prevSong(){
+    mp2.stop();
+    mediaPlayer.stop();
+
+}
 
 }//class

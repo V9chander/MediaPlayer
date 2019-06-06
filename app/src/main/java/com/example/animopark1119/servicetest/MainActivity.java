@@ -46,22 +46,20 @@ import java.util.ArrayList;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity implements MediaPlayer.OnCompletionListener,
-        MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnSeekCompleteListener,
-        MediaPlayer.OnInfoListener, MediaPlayer.OnBufferingUpdateListener,
-
-        AudioManager.OnAudioFocusChangeListener {
+public class MainActivity extends AppCompatActivity implements SeekBar.OnSeekBarChangeListener {
 
 
     AudioService audioService;
-    AudioService.MyBinder binder;
     SeekBar seekBar;
     public TextView startTimeField, endTimeField;
     Boolean bound = false;
     Button play;
     Button back;
+    Button next;
+    Runnable runnable;
 
-    Handler handler;
+    Handler handler=new Handler();
+
     ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -87,59 +85,55 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnCom
         endTimeField = findViewById(R.id.tvEndtime);
          back = findViewById(R.id.bBackward);
          play = findViewById(R.id.bPlay);
-        final Button next = findViewById(R.id.bForward);
-        if (bound)
-        seekBar.setMax(audioService.getMusicDuration());
+        next = findViewById(R.id.bForward);
 
-          playSong();
-
-    seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-
-        @Override
-        public void onProgressChanged (SeekBar seekBar,int progress, boolean fromUser){
-            if(audioService.mediaPlayer != null && bound)
-            audioService.seekToPos(progress*1000);
-        }
-
-        @Override
-        public void onStartTrackingTouch (SeekBar seekBar){
-
-        }
-
-        @Override
-        public void onStopTrackingTouch (SeekBar seekBar){
-
-
-        }
-
-    });
-
-          play.setOnClickListener(new View.OnClickListener() {
+        runnable=new Runnable() {
             @Override
-            public void onClick(View v) {
-
-                    playSong();
-                    seekBarStatus();
-
+            public void run() {
+             seekBarStatus();
             }
-        });
+        };
+
+
+           seekBar.setOnSeekBarChangeListener(this);
+
+           play.setOnClickListener(new View.OnClickListener() {
+               @Override
+                   public void onClick(View v) {
+
+                if (bound){
+                      if (!audioService.mp2.isPlaying()&&!audioService.mp3.isPlaying()) {
+                        playSong();
+                        seekBarStatus();
+                    }
+                    if (!audioService.mediaPlayer.isPlaying()&&!audioService.mp3.isPlaying()) {
+
+                    }
+                    if (!audioService.mediaPlayer.isPlaying()&&!audioService.mp2.isPlaying()) {
+
+                    }
+                }
+            }
+           });
         next.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
-            @Override
+           @Override
             public void onClick(View v) {
 
-                    // audioService.nextSong();
-                    audioService.mediaPlayer.start();
-
-
+                    if (bound) {
+                        audioService.playNextSong();
+                        playNextSong();
+                        seekBarNextStatus();
+                    }
             }
         });
         back.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View v) {
                 if (bound){
-                    // audioService.prevousSong();
-                    playSong();
+                   audioService.prevSong();
+                   playPrevSong();
+                   seekBarPrevStatus();
                 }
             }
         });
@@ -149,19 +143,13 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnCom
     @Override
     protected void onResume() {
         super.onResume();
-        if (bound){
             Intent intent = new Intent(MainActivity.this, AudioService.class);
             startService(intent);
             bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-        }
-
     }
     @Override
     protected void onStart() {
         super.onStart();
-
-
-
     }
    @Override
     protected void onDestroy() {
@@ -172,11 +160,12 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnCom
        }
 
    }
-public void playSong(){
 
-        if(bound){
-               if (audioService.mediaPlayer.isPlaying()) {
-                   audioService.mediaPlayer.pause();
+         public void playSong(){
+            if(bound){
+
+                if (audioService.mediaPlayer.isPlaying()) {
+                  audioService.mediaPlayer.pause();
                    play.setBackgroundResource(R.drawable.ic_play_arrow_black_24dp);
 
                }
@@ -184,26 +173,79 @@ public void playSong(){
                    audioService.mediaPlayer.start();
                    play.setBackgroundResource(R.drawable.ic_pause_black_24dp);
                }
+                  seekBar.setMax(audioService.getMusicDuration());
            }
-
-   }
-
-
-    public void seekBarStatus() {
-         handler=new Handler();
-
-            Runnable runnable = new Runnable() {
-
-            @Override
-            public void run() {
-                if (bound)
-                seekBar.setProgress(audioService.getMusicCurPos());
-            }
-        };handler.postDelayed(runnable,1000);
-
-
     }
 
+    public void playNextSong(){
+
+        if(bound){
+            if (audioService.mp2.isPlaying()) {
+                audioService.mp2.pause();
+                play.setBackgroundResource(R.drawable.ic_play_arrow_black_24dp);
+            }
+            else {
+                audioService.mp2.start();
+                play.setBackgroundResource(R.drawable.ic_pause_black_24dp);
+            }
+            seekBar.setMax(audioService.mp2.getDuration());
+        }
+    }
+
+    public void playPrevSong(){
+
+        if(bound){
+            if (audioService.mp3.isPlaying()) {
+                audioService.mp3.pause();
+                play.setBackgroundResource(R.drawable.ic_play_arrow_black_24dp);
+            }
+            else {
+                audioService.mp3.start();
+                play.setBackgroundResource(R.drawable.ic_pause_black_24dp);
+            }
+            seekBar.setMax(audioService.mp3.getDuration());
+        }
+    }
+    public void seekBarNextStatus() {
+
+        Handler had=new Handler();
+        Runnable runnable=new Runnable() {
+            @Override
+            public void run() {
+               seekBarNextStatus();
+            }
+        };
+        if (bound) {
+            //audioService.mediaPlayer.reset();
+            if (audioService.mp2.isPlaying())
+            seekBar.setProgress(audioService.mp2.getCurrentPosition());
+            had.postDelayed(runnable, 3000);
+        }
+    }
+
+    public void seekBarPrevStatus() {
+
+        Handler had=new Handler();
+        Runnable runnable=new Runnable() {
+            @Override
+            public void run() {
+                seekBarPrevStatus();
+            }
+        };
+        if (bound) {
+            //audioService.mediaPlayer.reset();
+            if (audioService.mp3.isPlaying())
+                seekBar.setProgress(audioService.mp3.getCurrentPosition());
+            had.postDelayed(runnable, 3000);
+        }
+    }
+    public void seekBarStatus() {
+        if (bound) {
+            //audioService.mediaPlayer.reset();
+            seekBar.setProgress(audioService.getMusicCurPos());
+            handler.postDelayed(runnable, 3000);
+        }
+       }
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
         outState.putBoolean("ServiceState",bound);
@@ -218,37 +260,18 @@ public void playSong(){
     }
 
     @Override
-    public void onAudioFocusChange(int focusChange) {
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        if(bound)
+            audioService.seekToPos(progress);
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
 
     }
 
     @Override
-    public void onBufferingUpdate(MediaPlayer mp, int percent) {
-
-    }
-
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-
-    }
-
-    @Override
-    public boolean onError(MediaPlayer mp, int what, int extra) {
-        return false;
-    }
-
-    @Override
-    public boolean onInfo(MediaPlayer mp, int what, int extra) {
-        return false;
-    }
-
-    @Override
-    public void onPrepared(MediaPlayer mp) {
-
-    }
-
-    @Override
-    public void onSeekComplete(MediaPlayer mp) {
+    public void onStopTrackingTouch(SeekBar seekBar) {
 
     }
 }
